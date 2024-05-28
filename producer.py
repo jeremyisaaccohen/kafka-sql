@@ -1,3 +1,4 @@
+import json
 import time
 from time import sleep
 
@@ -6,27 +7,22 @@ from kafka.admin import NewTopic
 
 import pandas as pd
 
+from constants import TOPIC_NAME, NUM_PARTITIONS, REPLICATION_FACTOR, BOOTSTRAP_SERVERS, FILE_PATH
 
 
-my_topic = NewTopic("jeremy_topic", num_partitions=1, replication_factor=1)
-admin_client = KafkaAdminClient(bootstrap_servers="localhost:9092", client_id='test')
-# admin_client.create_topics(new_topics=[my_topic])
+my_topic = NewTopic(TOPIC_NAME, num_partitions=NUM_PARTITIONS, replication_factor=REPLICATION_FACTOR)
+admin_client = KafkaAdminClient(bootstrap_servers=[BOOTSTRAP_SERVERS], client_id='test')
 
-producer = KafkaProducer(bootstrap_servers=["localhost:9092"])
-for i in range(40):
-    producer.send("jeremy_topic", value="heres a test".encode('utf-8'))
-    print("sent ", i)
+producer = KafkaProducer(bootstrap_servers=[BOOTSTRAP_SERVERS])
+for i ,chunk in pd.read_csv(FILE_PATH).iterrows():
+    print("chunk: ",chunk)
+    chunk_dict = chunk.to_dict()
+    data = json.dumps(chunk_dict).encode('utf-8')
+    producer.send(my_topic.name, value=data)
+    print("sent ", data)
 
 producer.flush()
 producer.close()
-
-consumer = KafkaConsumer("jeremy_topic", bootstrap_servers=['localhost:9092'], auto_offset_reset='earliest')
-for message in consumer:
-    print("hmmmm")
-    print(message)
-    print(message.value.decode("utf-8"))
-
-print("done ???")
 
 
 
