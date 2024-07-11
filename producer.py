@@ -15,16 +15,17 @@ admin_client = KafkaAdminClient(bootstrap_servers=[BOOTSTRAP_SERVERS], client_id
 
 producer = KafkaProducer(bootstrap_servers=[BOOTSTRAP_SERVERS])
 for i ,chunk in pd.read_csv(FILE_PATH).iterrows():
-    print(i,"chunk: ",chunk)
     chunk_dict = chunk.to_dict()
     data = json.dumps(chunk_dict).encode('utf-8')
+    if i == 0:
+        print(data)
     producer.send(my_topic.name, value=data)
-    print("sent ", data)
 
 print(producer.metrics())
 
 producer.flush()
 producer.close()
+
 
 
 

@@ -9,11 +9,27 @@ consumer = KafkaConsumer(TOPIC_NAME, bootstrap_servers=[BOOTSTRAP_SERVERS], auto
 ### Write to SQL?
 import psycopg2
 
-# Function to convert NaN values to None for SQL NULL
-def nan_to_none(value):
-    if isinstance(value, float) and np.isnan(value):
-        return None
-    return value
+
+def parse_message(message):
+    print("Consumer received", message)
+    message = json.loads(message.value.decode())
+    data = {k: None if isinstance(v, float) and math.isnan(v) else v for k, v in message.items()}
+    keys = tuple(message.keys())
+    vals = tuple(data.values())
+
+    # Function to format the values
+    def format_value(value):
+        if isinstance(value, str):
+            if value.endswith('%'):
+                return str(float(value.strip('%')) / 100)  # Convert percentage string to float
+            return "'{}'".format(value.replace("'",
+                                               "''"))  # Enclose string in single quotes and escape single quotes within the string
+        elif value is None:
+            return 'NULL'  # Convert None to NULL
+        return str(value)  # Leave other values as is
+
+    # Format the values for SQL
+    return ', '.join([format_value(v) for v in vals])
 
 with psycopg2.connect(
     "dbname='postgres' user='postgres' host='localhost' port='5432'"
@@ -23,8 +39,6 @@ with psycopg2.connect(
     print("Connected to the database.")
 
     with conn.cursor() as cursor:
-
-
         i = 0
         cursor.execute("""CREATE TABLE IF NOT EXISTS footy (
         name VARCHAR(100),
@@ -92,38 +106,14 @@ with psycopg2.connect(
         key_string = "name, jersey_number, club, position, nationality, age, appearances, wins, losses, goals, goals_per_match, headed_goals, goals_with_right_foot, goals_with_left_foot, penalties_scored, freekicks_scored, shots, shots_on_target, shooting_accuracy_percent, hit_woodwork, big_chances_missed, clean_sheets, goals_conceded, tackles, tackle_success_percent, last_man_tackles, blocked_shots, interceptions, clearances, headed_clearance, clearances_off_line, recoveries, duels_won, duels_lost, successful_50_50s, aerial_battles_won, aerial_battles_lost, own_goals, errors_leading_to_goal, assists, passes, passes_per_match, big_chances_created, crosses, cross_accuracy_percent, through_balls, accurate_long_balls, saves, penalties_saved, punches, high_claims, catches, sweeper_clearances, throw_outs, goal_kicks, yellow_cards, red_cards, fouls, offsides"
 
         for message in consumer:
-            message = json.loads(message.value.decode())
-            data = {k: None if isinstance(v, float) and math.isnan(v) else v for k, v in message.items()}
-            print(data)
-            keys = tuple(message.keys())
-            vals = tuple(data.values())
-
-            # print(formatted_values)
-
-
-            print(message)
-            print(message['Goals per match'])
-            # print(keys)
-            print(vals)
-
-
-            # Function to format the values
-            def format_value(value):
-                if isinstance(value, str):
-                    if value.endswith('%'):
-                        return str(float(value.strip('%')) / 100)  # Convert percentage string to float
-                    return "'{}'".format(value.replace("'",
-                                                       "''"))  # Enclose string in single quotes and escape single quotes within the string
-                elif value is None:
-                    return 'NULL'  # Convert None to NULL
-                return str(value)  # Leave other values as is
-
-
             # Format the values for SQL
-            formatted_values = ', '.join([format_value(v) for v in vals])
-            # break
-            # cursor.execute(f"INSERT INTO footy {keys} VALUES ({vals});")
-            cursor.execute(
-                f"INSERT INTO footy({key_string}) VALUES ({formatted_values});")
-            conn.commit()
+            try:
+                formatted_values = parse_message(message)
+                cursor.execute(
+                    f"INSERT INTO footy({key_string}) VALUES ({formatted_values});")
+                conn.commit()
+                # TODO: If inactive for a few seconds, weve exhausted consumer, print how many weve inserted.
+            except:
+                print(f"Error parsing {message}")
+
 
