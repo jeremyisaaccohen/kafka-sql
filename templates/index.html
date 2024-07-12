@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Stock Ticker Entry</title>
+</head>
+<body>
+    <form action="/" method="post">
+        <label for="ticker">Stock Ticker:</label>
+        <input type="text" id="ticker" name="ticker"><br><br>
+        <button type="submit">Submit</button>
+    </form>
+
+    {% if result %}
+        <p>{{ result }}</p>
+    {% endif %}
+</body>
+</html>
