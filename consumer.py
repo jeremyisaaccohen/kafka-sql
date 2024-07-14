@@ -106,6 +106,7 @@ with psycopg2.connect(
         key_string = "name, jersey_number, club, position, nationality, age, appearances, wins, losses, goals, goals_per_match, headed_goals, goals_with_right_foot, goals_with_left_foot, penalties_scored, freekicks_scored, shots, shots_on_target, shooting_accuracy_percent, hit_woodwork, big_chances_missed, clean_sheets, goals_conceded, tackles, tackle_success_percent, last_man_tackles, blocked_shots, interceptions, clearances, headed_clearance, clearances_off_line, recoveries, duels_won, duels_lost, successful_50_50s, aerial_battles_won, aerial_battles_lost, own_goals, errors_leading_to_goal, assists, passes, passes_per_match, big_chances_created, crosses, cross_accuracy_percent, through_balls, accurate_long_balls, saves, penalties_saved, punches, high_claims, catches, sweeper_clearances, throw_outs, goal_kicks, yellow_cards, red_cards, fouls, offsides"
 
         for message in consumer:
+            print("new message in consumer: ", message)
             # Format the values for SQL
             try:
                 formatted_values = parse_message(message)
