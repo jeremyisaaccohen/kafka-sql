@@ -1,5 +1,6 @@
 # TOPIC
 TOPIC_NAME = "prem_stats"
+STOCK_TOPIC = "stocks"
 
 # CONFIG
 BOOTSTRAP_SERVERS = "localhost:9092"

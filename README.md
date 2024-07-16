@@ -31,3 +31,8 @@ Load test MySql and postgres
 After: Take producer and make an api so you can make a post request that publishes to kafka
 
 use promoetheus for stats
+
+
+## TODO:
+
+Working capital ratio
