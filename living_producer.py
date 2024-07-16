@@ -9,11 +9,9 @@ from fastapi import Request
 
 from fastapi.templating import Jinja2Templates
 
-from constants import TOPIC_NAME, NUM_PARTITIONS, REPLICATION_FACTOR, BOOTSTRAP_SERVERS, FILE_PATH
+from constants import NUM_PARTITIONS, REPLICATION_FACTOR, BOOTSTRAP_SERVERS, FILE_PATH, STOCK_TOPIC
 
-
-
-stock_tickers = NewTopic(TOPIC_NAME, num_partitions=NUM_PARTITIONS, replication_factor=REPLICATION_FACTOR)
+stock_tickers = NewTopic(STOCK_TOPIC, num_partitions=NUM_PARTITIONS, replication_factor=REPLICATION_FACTOR)
 
 producer = KafkaProducer(bootstrap_servers=[BOOTSTRAP_SERVERS])
 
